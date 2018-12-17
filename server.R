@@ -41,10 +41,11 @@ shinyServer(function(input, output) {
 
     mnth_plt <-
       mdat %>%
-      ggplot(aes(reorder(month_year, month_begins), spent))+
+      ggplot(aes(reorder(month_year, month_begins), spent,
+                 fill = as.character(Month)))+
         geom_bar(stat = "identity")+
         theme(axis.text.x  = element_text(angle = 90))+
-        labs(x="", y="Spent")
+        labs(x="", y="Spent", fill="Month")
     
     print(mnth_plt)
       
