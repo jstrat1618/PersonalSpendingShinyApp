@@ -18,7 +18,8 @@ shinyUI(fluidPage(
     # Show a plot of the generated distribution
     mainPanel(
       plotOutput("mnth_plt"),
-      textOutput("last_month_spending")
+      textOutput("last_month_spending"),
+      tableOutput("yoy_tbl")
     )
   )
 ))

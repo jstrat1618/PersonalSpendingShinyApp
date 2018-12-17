@@ -27,8 +27,7 @@ todays_date <- Sys.Date()
 todays_month <- month(todays_date, label = TRUE)
 todays_year <- year(todays_date)
 
-
-
+pct_change <- function(ynew, yold) (ynew-yold)/yold
 
 shinyServer(function(input, output) {
 
@@ -56,11 +55,30 @@ shinyServer(function(input, output) {
     
     last_month_dat <- mdat[(nrow(mdat) - 1),]
     last_month_spnt <- dollar_format()(last_month_dat$spent)
-    yoy_change <- (last_month_dat$spent - last_month_dat$last_yr_spent)/last_month_dat$spent
+    yoy_change <- pct_change(last_month_dat$spent,last_month_dat$last_yr_spent)
     change <- ifelse(yoy_change >0, "increase", "decrease")
     
     paste("Last month we spent ", last_month_spnt, ", a ", percent(yoy_change),
           change, ".", sep="")
+    
+    
+  })
+  
+  output$yoy_tbl <- renderTable({
+    out_df <- 
+      mdat %>%
+      filter(!is.na(last_yr_spent)) %>%
+      mutate(yoy_roc = percent(pct_change(spent, last_yr_spent))) %>%
+      mutate_at(vars(spent, last_yr_spent), function(x)dollar(x)) %>%
+      select(Month, Year, spent, last_yr_spent, yoy_roc) %>%
+      rename(Spent = spent, 
+             `Last Yea` = last_yr_spent,
+             `YOY Change` = yoy_roc)
+    
+    if(input$omit){
+      out_df %>%
+        filter(Month != todays_month | Year != todays_year )
+    } else out_df
     
     
   })
