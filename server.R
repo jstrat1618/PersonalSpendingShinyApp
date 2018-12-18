@@ -1,8 +1,10 @@
 library(RSQLite)
 library(dplyr)
-library(ggplot2)
 library(lubridate)
 library(scales)
+library(ggplot2)
+library(ggthemes)
+library(plotly)
 library(shiny)
 
 conn <- dbConnect(drv = SQLite(), "../../Misc/PersonalFinances/MainDatabase.db")
@@ -41,7 +43,7 @@ pct_change <- function(ynew, yold) (ynew-yold)/yold
 
 shinyServer(function(input, output) {
 
-  output$mnth_plt <- renderPlot({
+  output$mnth_plt <- renderPlotly({
     
     if(input$omit){
       mdat <- 
@@ -52,13 +54,18 @@ shinyServer(function(input, output) {
     mnth_plt <-
       mdat %>%
       ggplot(aes(reorder(month_year, month_begins), spent,
-                 fill = as.character(Month)))+
+                 fill = as.character(Month),
+                 text = paste('Timeframe: ', reorder(month_year, month_begins),
+                              'Spent:', dollar(spent))))+
         geom_bar(stat = "identity")+
+        scale_y_continuous(labels = scales::dollar)+
+        theme_bw()+
         theme(axis.text.x  = element_text(angle = 90))+
         labs(x="", y="Spent", fill="Month")
     
-    print(mnth_plt)
-      
+    plt <-ggplotly(mnth_plt, tooltip = "text")
+    
+    print(plt)  
 
   })
   
