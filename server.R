@@ -73,8 +73,8 @@ shinyServer(function(input, output) {
     mom_up_down <- ifelse(mom_change >0, "increase", "decrease")
     
     paste("Last month we spent ", last_month_spnt, ", a ", percent(yoy_change),
-          yoy_up_down, ", and ", percent(mom_change), " ", mom_up_down, 
-          "from last month.",
+          yoy_up_down, " YOY, and ", percent(mom_change), " ", mom_up_down, 
+          " from last month.",
           sep="")
     
     
@@ -88,7 +88,7 @@ shinyServer(function(input, output) {
       mutate_at(vars(spent, last_yr_spent), function(x)dollar(x)) %>%
       select(Month, Year, spent, last_yr_spent, yoy_roc) %>%
       rename(Spent = spent, 
-             `Last Yea` = last_yr_spent,
+             `Last Year` = last_yr_spent,
              `YOY Change` = yoy_roc)
     
     if(input$omit){
