@@ -1,11 +1,20 @@
-library(readr)
+library(RSQLite)
 library(dplyr)
 library(ggplot2)
 library(lubridate)
 library(scales)
 library(shiny)
 
-dat <- read_csv("../../Misc/PersonalFinances/CleanedFinancialData/MasterSpending.csv")
+conn <- dbConnect(drv = SQLite(), "../../Misc/PersonalFinances/MainDatabase.db")
+
+tmp_dat <- dbGetQuery(conn, "SELECT * FROM EXPENSES")
+
+dat <-
+  tmp_dat %>%
+  mutate(Date = as.Date(Date, origin = '1970-01-01')) %>%
+  as_tibble()
+
+dbDisconnect(conn)
 
 mdat <- 
   dat %>%
@@ -19,6 +28,7 @@ mdat <-
   ungroup() %>%
   arrange(month_begins) %>%
   mutate(last_yr_spent = lag(spent, 12), 
+         last_month_spent = lag(spent, 1),
          month_year = paste(Month, substr(as.character(Year), 3,4), sep=""),
          month_year = factor(month_year)) %>%
   select(month_year, everything(.))
@@ -57,10 +67,15 @@ shinyServer(function(input, output) {
     last_month_dat <- mdat[(nrow(mdat) - 1),]
     last_month_spnt <- dollar_format()(last_month_dat$spent)
     yoy_change <- pct_change(last_month_dat$spent,last_month_dat$last_yr_spent)
-    change <- ifelse(yoy_change >0, "increase", "decrease")
+    yoy_up_down <- ifelse(yoy_change >0, "increase", "decrease")
+    
+    mom_change <- pct_change(last_month_dat$spent, last_month_dat$last_month_spent)
+    mom_up_down <- ifelse(mom_change >0, "increase", "decrease")
     
     paste("Last month we spent ", last_month_spnt, ", a ", percent(yoy_change),
-          change, ".", sep="")
+          yoy_up_down, ", and ", percent(mom_change), " ", mom_up_down, 
+          "from last month.",
+          sep="")
     
     
   })
