@@ -9,31 +9,40 @@ library(shiny)
 
 conn <- dbConnect(drv = SQLite(), "../../Misc/PersonalFinances/MainDatabase.db")
 
-tmp_dat <- dbGetQuery(conn, "SELECT * FROM EXPENSES")
+tmp_dat <- dbGetQuery(conn, "SELECT * FROM Expenses")
+
+savings <- dbGetQuery(conn, "SELECT * FROM SavingsTransfers")
+
+outs <- dbGetQuery(conn, "SELECT * FROM OutlyingExpenses")
+
 
 dat <-
   tmp_dat %>%
   mutate(Date = as.Date(Date, origin = '1970-01-01')) %>%
   as_tibble()
 
-dbDisconnect(conn)
 
-mdat <- 
-  dat %>%
-  mutate(Month = month(Date, label=TRUE),
-         Year = year(Date),
-         month_begins = floor_date(Date, unit="month")) %>%
-  group_by(Month, Year) %>%
-  summarise(
-    month_begins = month_begins[1],
-    spent = sum(spent)) %>%
-  ungroup() %>%
-  arrange(month_begins) %>%
-  mutate(last_yr_spent = lag(spent, 12), 
-         last_month_spent = lag(spent, 1),
-         month_year = paste(Month, substr(as.character(Year), 3,4), sep=""),
-         month_year = factor(month_year)) %>%
-  select(month_year, everything(.))
+
+toMonthly <- function(df){
+  df %>%
+    mutate(Month = month(Date, label=TRUE),
+           Year = year(Date),
+           month_begins = floor_date(Date, unit="month")) %>%
+    group_by(Month, Year) %>%
+    summarise(
+      month_begins = month_begins[1],
+      spent = sum(spent)) %>%
+    ungroup() %>%
+    arrange(month_begins) %>%
+    mutate(last_yr_spent = lag(spent, 12),
+           last_month_spent = lag(spent, 1),
+           month_year = paste(Month, substr(as.character(Year), 3,4), sep=""),
+           month_year = factor(month_year)) %>%
+    select(month_year, everything(.))
+  
+}
+
+dbDisconnect(conn)
 
 todays_date <- Sys.Date()
 todays_month <- month(todays_date, label = TRUE)
@@ -42,10 +51,17 @@ todays_year <- year(todays_date)
 pct_change <- function(ynew, yold) (ynew-yold)/yold
 
 shinyServer(function(input, output) {
-
+  
   output$mnth_plt <- renderPlotly({
     
-    if(input$omit){
+    if(input$omitSavings)dat <- filter(dat, !(expense_id %in% savings$expense_id))
+    
+    if(input$omitOutliers)dat <- filter(dat, !(expense_id %in% outs$expense_id))
+    
+    
+    mdat <- toMonthly(dat)
+    
+    if(input$omitCurrentMonth){
       mdat <- 
         mdat %>%
         filter(Month != todays_month | Year != todays_year )
@@ -71,6 +87,13 @@ shinyServer(function(input, output) {
   
   output$last_month_spending <- renderText({
     
+    if(input$omitSavings)dat <- filter(dat, !(expense_id %in% savings$expense_id))
+    
+    if(input$omitOutliers)dat <- filter(dat, !(expense_id %in% outs$expense_id))
+    
+    
+    mdat <- toMonthly(dat)
+    
     last_month_dat <- mdat[(nrow(mdat) - 1),]
     last_month_spnt <- dollar_format()(last_month_dat$spent)
     yoy_change <- pct_change(last_month_dat$spent,last_month_dat$last_yr_spent)
@@ -88,6 +111,14 @@ shinyServer(function(input, output) {
   })
   
   output$yoy_tbl <- renderTable({
+    
+    if(input$omitSavings)dat <- filter(dat, !(expense_id %in% savings$expense_id))
+    
+    if(input$omitOutliers)dat <- filter(dat, !(expense_id %in% outs$expense_id))
+    
+    
+    mdat <- toMonthly(dat)
+    
     out_df <- 
       mdat %>%
       filter(!is.na(last_yr_spent)) %>%
@@ -98,7 +129,7 @@ shinyServer(function(input, output) {
              `Last Year` = last_yr_spent,
              `YOY Change` = yoy_roc)
     
-    if(input$omit){
+    if(input$omitCurrentMonth){
       out_df %>%
         filter(Month != todays_month | Year != todays_year )
     } else out_df

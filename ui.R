@@ -1,3 +1,4 @@
+library(plotly)
 library(shiny)
 
 shinyUI(fluidPage(
@@ -7,8 +8,18 @@ shinyUI(fluidPage(
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
-      selectInput("omit",
+      selectInput("omitCurrentMonth",
                    label = "Omit This Month: ",
+                  c("Yes"=TRUE, "No" = FALSE),
+                  selected = "Yes"),
+      
+      selectInput("omitSavings",
+                  label = "Omit Savings: ",
+                  c("Yes"=TRUE, "No" = FALSE),
+                  selected = "Yes"),
+      
+      selectInput("omitOutliers",
+                  label = "Omit Outliers: ",
                   c("Yes"=TRUE, "No" = FALSE),
                   selected = "Yes")
       
