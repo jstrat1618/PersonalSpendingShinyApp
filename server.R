@@ -7,7 +7,7 @@ library(ggthemes)
 library(plotly)
 library(shiny)
 
-conn <- dbConnect(drv = SQLite(), "../../Misc/PersonalFinances/MainDatabase.db")
+conn <- dbConnect(drv = SQLite(), "FakeDatabase.db")
 
 tmp_dat <- dbGetQuery(conn, "SELECT * FROM Expenses")
 
