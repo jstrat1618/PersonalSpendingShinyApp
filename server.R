@@ -1,5 +1,6 @@
 library(RSQLite)
 library(dplyr)
+library(tidyr)
 library(lubridate)
 library(scales)
 library(ggplot2)
@@ -121,13 +122,15 @@ shinyServer(function(input, output) {
     
     out_df <- 
       mdat %>%
-      filter(!is.na(last_yr_spent)) %>%
-      mutate(yoy_roc = percent(pct_change(spent, last_yr_spent))) %>%
+      mutate(yoy_roc = percent(pct_change(spent, last_yr_spent)),
+             mom_roc = percent(pct_change(spent,  lag(spent, 1)))) %>%
+      drop_na() %>%
       mutate_at(vars(spent, last_yr_spent), function(x)dollar(x)) %>%
-      select(Month, Year, spent, last_yr_spent, yoy_roc) %>%
+      select(Month, Year, spent, last_yr_spent, yoy_roc, mom_roc) %>%
       rename(Spent = spent, 
              `Last Year` = last_yr_spent,
-             `YOY Change` = yoy_roc)
+             `YOY ROC` = yoy_roc,
+             `MOM ROC` = mom_roc)
     
     if(input$omitCurrentMonth){
       out_df %>%
