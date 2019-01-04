@@ -1,0 +1,2 @@
+### Purpose
+This is an application I wrote to help track my spending when accounting for certain outliers. It doesn't tell me much about where the money is going. However, it does allow me to identify high level trends. I have substitutued fake data for my data.
