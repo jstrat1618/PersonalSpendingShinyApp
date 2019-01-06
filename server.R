@@ -49,6 +49,8 @@ todays_date <- Sys.Date()
 todays_month <- month(todays_date, label = TRUE)
 todays_year <- year(todays_date)
 
+
+
 pct_change <- function(ynew, yold) (ynew-yold)/yold
 
 shinyServer(function(input, output) {
@@ -139,5 +141,29 @@ shinyServer(function(input, output) {
     
     
   })
+  
+  output$yoy_proj <- renderText({
+    if(input$omitSavings)dat <- filter(dat, !(expense_id %in% savings$expense_id))
+    
+    if(input$omitOutliers)dat <- filter(dat, !(expense_id %in% outs$expense_id))
+    
+    mdat <- toMonthly(dat)
+    
+    last_year_spent <-
+      mdat %>%
+      filter(Month == todays_month & Year == (todays_year - 1)) %>%
+      select(spent) %>%
+      as.numeric()
+    
+    yoy_change <- input$yoy_change/100
+    spending_proj <- dollar(last_year_spent*(1+yoy_change))
+  
+    paste("Based on YOY spending, you will spend ",  as.character(spending_proj),
+          ".",  sep='')
+    
+  })
+  
+
+  
 
 })

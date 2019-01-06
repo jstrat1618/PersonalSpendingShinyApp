@@ -21,7 +21,15 @@ shinyUI(fluidPage(
       selectInput("omitOutliers",
                   label = "Omit Outliers: ",
                   c("Yes"=TRUE, "No" = FALSE),
-                  selected = "Yes")
+                  selected = "Yes"),
+      
+      sliderInput("yoy_change", min = -25, max = 25, value = 0, 
+                  label = "YOY Change", post = " %"),
+      
+      headerPanel(""),
+      headerPanel("Next Month's Spending"),
+      textOutput("yoy_proj")
+      
       
       
     ),
