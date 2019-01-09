@@ -128,6 +128,7 @@ shinyServer(function(input, output) {
              mom_roc = percent(pct_change(spent,  lag(spent, 1)))) %>%
       drop_na() %>%
       mutate_at(vars(spent, last_yr_spent), function(x)dollar(x)) %>%
+      mutate(Year = format(round(Year, digits = 0), nsmall = 0)) %>%
       select(Month, Year, spent, last_yr_spent, yoy_roc, mom_roc) %>%
       rename(Spent = spent, 
              `Last Year` = last_yr_spent,
