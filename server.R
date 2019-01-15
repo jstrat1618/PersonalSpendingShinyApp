@@ -164,6 +164,28 @@ shinyServer(function(input, output) {
     
   })
   
+  
+  output$mom_proj <- renderText({
+    if(input$omitSavings)dat <- filter(dat, !(expense_id %in% savings$expense_id))
+    
+    if(input$omitOutliers)dat <- filter(dat, !(expense_id %in% outs$expense_id))
+    
+    mdat <- toMonthly(dat)
+    
+    
+    last_month_spent <-
+      mdat %>%
+      slice(n())%>%
+      select(spent) %>%
+      as.numeric()
+    
+    mom_change <- input$mom_change/100
+    spending_proj <- dollar(last_month_spent*(1+mom_change))
+    
+    paste("Based on MOM spending, you will spend ",  as.character(spending_proj),
+          ".",  sep='')
+    
+  })
 
   
 

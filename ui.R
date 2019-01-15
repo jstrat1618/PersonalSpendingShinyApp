@@ -25,10 +25,13 @@ shinyUI(fluidPage(
       
       sliderInput("yoy_change", min = -25, max = 25, value = 0, 
                   label = "YOY Change", post = " %"),
+      sliderInput("mom_change", min = -25, max = 25, value = 0, 
+                  label = "MOM Change", post = " %"),
       
       headerPanel(""),
       headerPanel("Next Month's Spending"),
-      textOutput("yoy_proj")
+      textOutput("yoy_proj"),
+      textOutput("mom_proj")
       
       
       
